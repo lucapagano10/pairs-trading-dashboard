@@ -59,8 +59,9 @@ class Dashboard():
         self.coint_df = self.backtester.coint_df
         self.researched_df = self.backtester.researched_df
         self.backtested_df = self.backtester.backtested_df
+        print(self.researched_df)
         print(self.backtested_df)
-        self.__write_columns()
+        # self.__write_columns()
 
     def run(self) -> None:
         self.__set_page_config(layout="wide")
