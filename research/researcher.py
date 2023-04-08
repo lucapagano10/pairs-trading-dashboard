@@ -21,7 +21,7 @@ class Researcher():
         self.researched_df = pd.read_csv(os.path.join(path,"..", "data/researched/research_output.csv"))
 
 
-    def update_data(self,timeframe:str, min_correlation:float, interval:str, end_date: str) -> None:
+    def update_data(self,timeframe:str, min_correlation:float, interval:str, end_date: str = None) -> None:
         """
         :param timeframe: e.g. '1d', '4h', '3S', '15m' 
         :type: str

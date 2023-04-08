@@ -49,16 +49,17 @@ class Dashboard():
         :param min_correlation: e.g. '0.83' is 83%
         :type: float
         """
+        
+        print(timeframe, min_correlation, interval, end_date)
         self.researcher.update_data(timeframe, min_correlation, interval, end_date)
+        
+        print(self.researched_df)
         self.backtester.read_data(self.researcher)
         self.backtester.run_backtest()
-
-        self.hist_df = self.backtester.hist_df
-        self.cleared_df = self.backtester.cleared_df
-        self.corr_df = self.backtester.corr_df
-        self.coint_df = self.backtester.coint_df
-        self.researched_df = self.backtester.researched_df
-        self.backtested_df = self.backtester.backtested_df
+        
+        print(self.backtested_df)
+        self.load_data()
+        
         print(self.researched_df)
         print(self.backtested_df)
         # self.__write_columns()
