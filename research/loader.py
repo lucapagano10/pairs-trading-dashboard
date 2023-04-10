@@ -3,7 +3,6 @@ from binance.client import Client
 from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
 import os
-import datetime as dt
 
 path = os.path.dirname(__file__)
 

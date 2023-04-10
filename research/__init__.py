@@ -1,4 +1,4 @@
-"""A Pair Trading Bot System
+"""A Pair Trading Dashboard System
 
 .. moduleauthor:: Yuri Fontoura
 

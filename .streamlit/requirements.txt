@@ -1,0 +1,8 @@
+pandas
+numpy
+python-binance
+statsmodels
+matplotlib
+altair
+backtrader
+sklearn
