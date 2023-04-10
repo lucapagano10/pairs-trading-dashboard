@@ -8,11 +8,11 @@ path = os.path.dirname(__file__)
 
 class Cointegration():
 
-    def get_cointegration(self, corr: pd.DataFrame, cleared_df: pd.DataFrame
+    def get_cointegration(self, corr: pd.DataFrame, cleared_df: pd.DataFrame, save: bool = True
                           ) -> pd.DataFrame:
 
         ts_coint = self.__get_ts_coint(corr, cleared_df)
-        ts_coint.to_csv(os.path.join(path,'..','data/processing/coint_output.csv'), index=False)
+        ts_coint.to_csv(os.path.join(path,'..','data/processing/coint_output.csv'), index=False) if save else None
         return ts_coint
 
     def __get_ts_coint(self, corr: pd.DataFrame, cleared_df: pd.DataFrame) -> pd.DataFrame:

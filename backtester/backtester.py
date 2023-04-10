@@ -20,26 +20,36 @@ class Backtester():
         self.coint_df = pd.DataFrame()
         self.researched_df = pd.DataFrame()
         self.backtested_df = pd.DataFrame()
-        self.backtested_fig = matplotlib.figure.Figure()
+        self.backtested_fig = matplotlib
+
         
-    def read_data(self, best_coins: Researcher) -> None:
-        self.hist_df = best_coins.hist_df
-        self.cleared_df = best_coins.cleared_df
-        self.corr_df = best_coins.corr_df
-        self.coint_df = best_coins.coint_df
-        self.researched_df = best_coins.researched_df
+    def read_researched_data(self, researched: Researcher) -> None:
+        self.hist_df = researched.hist_df
+        self.cleared_df = researched.cleared_df
+        self.corr_df = researched.corr_df
+        self.coint_df = researched.coint_df
+        self.researched_df = researched.researched_df
+      
+    def load_backtested_data(self) -> None:
+        self.backtested_df = pd.read_csv(os.path.join(path,"..", "data/backtested/backtester_output.csv"))
         
-    def run_backtest(self) -> None:
+    def run_backtest(self, save:bool = True) -> None:
+        
+        self.__clear_backtest()
         
         np.vectorize(lambda  currency1, currenc2, ratio: 
             self.__single_backtest(currency1, currenc2, ratio)
             )(self.researched_df.Currency1, self.researched_df.Currency2, self.researched_df.Ratio)
         
         self.backtested_df.drop_duplicates(inplace=True)
-        self.backtested_df.to_csv(os.path.join(path,"..", "data/backtested/backtester_output.csv"), index=False)     
+        self.backtested_df.to_csv(os.path.join(path,"..", "data/backtested/backtester_output.csv"), index=False) if save else None
         
-        
+    def __clear_backtest(self) -> None:
+        self.backtested_df = pd.DataFrame()
+        self.backtested_fig = matplotlib
+           
     def __single_backtest(self, currency1, currency2, ratio) -> None:
+        
         self.__configure_cerebro(currency1, currency2, ratio)
         output = self.cerebro.run()
         returns_df = self.__get_returns(output)
@@ -94,7 +104,7 @@ class Backtester():
         return returns_df
     
 
-    def plot_backtest(self, currency1:str, currency2:str, ratio:float, saveonly:bool=False) -> matplotlib.figure.Figure:
+    def plot_backtest(self, currency1:str, currency2:str, ratio:float, saveonly:bool=False) -> matplotlib:
         self.__configure_cerebro(currency1, currency2, ratio)
         self.cerebro.run()
         figs = self.__avoid_plot(volume=False) if saveonly else self.plot(volume=False, iplot=True)
@@ -103,7 +113,7 @@ class Backtester():
   
     def __avoid_plot(self, plotter=None, numfigs=1, iplot=True, start=None, end=None,
              width=16, height=9, dpi=300, tight=True, use=None,
-             **kwargs) -> matplotlib.figure.Figure:
+             **kwargs) -> matplotlib:
  
         if self.cerebro._exactbars > 0:
             return

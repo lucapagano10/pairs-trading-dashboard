@@ -1,6 +1,5 @@
 import streamlit as st
 import altair as alt
-import pandas as pd
 import os
 import datetime
 
@@ -8,71 +7,56 @@ from research import Researcher
 from backtester import Backtester
 
 # import hydralit_components as hc
-import time
 
 
 path = os.path.dirname(__file__)
 
 
-class Dashboard():
-    def __init__(self):
-        self.researcher = Researcher()
-        self.backtester = Backtester()
+class Dashboard(Backtester, Researcher):
 
-        self.hist_df = pd.DataFrame()
-        self.cleared_df = pd.DataFrame()
-        self.corr_df = pd.DataFrame()
-        self.coint_df = pd.DataFrame()
-        self.researched_df = pd.DataFrame()
-        self.backtested_df = pd.DataFrame()
+    def __init__(self):
+        super().__init__()
 
     def load_data(self) -> None:
-        self.researcher.load_data()
-        self.backtester.read_data(self.researcher)
-        self.backtester.run_backtest()
 
-        self.hist_df = self.backtester.hist_df
-        self.cleared_df = self.backtester.cleared_df
-        self.corr_df = self.backtester.corr_df
-        self.coint_df = self.backtester.coint_df
-        self.researched_df = self.backtester.researched_df
-        self.backtested_df = self.backtester.backtested_df
+        if 'hist_df' not in st.session_state:
+            self.load_researched_data()
+            self.load_backtested_data()
 
-    def __update_data(self, timeframe: str, min_correlation: float, interval: str, end_date: str = None) -> None:
-        """
-        :param timeframe: e.g. '1d', '4h', '3S', '15m' 
-        :type: str
+        else:
+            self.hist_df = st.session_state['hist_df']
+            self.cleared_df = st.session_state['cleared_df']
+            self.corr_df = st.session_state['corr_df']
+            self.coint_df = st.session_state['coint_df']
+            self.researched_df = st.session_state['researched_df']
+            self.backtested_df = st.session_state['backtested_df']
+            self.backtested_fig = st.session_state['backtested_fig']
 
-        :param interval: e.g. '1 year ago', '10days ago', 'datetime'
-        :type: str
+    @st.cache_data
+    def __load_data(_self, timeframe: str, min_correlation: float, interval: str) -> None:
 
-        :param min_correlation: e.g. '0.83' is 83%
-        :type: float
-        """
+        _self.filter_research_data(timeframe=timeframe, min_correlation=min_correlation,
+                                   interval=interval)
         
-        print(timeframe, min_correlation, interval, end_date)
-        self.researcher.update_data(timeframe, min_correlation, interval, end_date)
-        
-        print(self.researched_df)
-        self.backtester.read_data(self.researcher)
-        self.backtester.run_backtest()
-        
-        print(self.backtested_df)
-        self.load_data()
-        
-        print(self.researched_df)
-        print(self.backtested_df)
-        # self.__write_columns()
+        _self.run_backtest(save=False)
+
+        st.session_state['hist_df'] = _self.hist_df
+        st.session_state['cleared_df'] = _self.cleared_df
+        st.session_state['corr_df'] = _self.corr_df
+        st.session_state['coint_df'] = _self.coint_df
+        st.session_state['researched_df'] = _self.researched_df
+        st.session_state['backtested_df'] = _self.backtested_df
+        st.session_state['backtested_fig'] = _self.backtested_fig
 
     def run(self) -> None:
         self.__set_page_config(layout="wide")
-        self._define_initial_style()
+        self.__define_initial_style()
         self.__write_columns()
 
     def __set_page_config(self, layout: str = "wide") -> None:
         st.set_page_config(layout=layout)
 
-    def _define_initial_style(self) -> None:
+    def __define_initial_style(self) -> None:
         st.markdown("""
                     <style>
                         .block-container{
@@ -84,12 +68,12 @@ class Dashboard():
                             padding-top: 0rem;
                             padding-bottom: 0rem;
                         }
-                        
+
                         h5 {
                             padding-top: 0rem;
                             padding-bottom: 0.2rem;
                         }
-                        
+
                         h1, h2 {
                             padding-top: 0rem;
                             padding-bottom: 0.0rem;
@@ -98,11 +82,11 @@ class Dashboard():
                         p {
                             margin-bottom: 0px;
                         }
-                        
+
                         button p {
                             margin-bottom: 16px;
                         }
-                        
+
                         # canvas {
                         #     height: 35vh !important;
                         # }
@@ -114,45 +98,84 @@ class Dashboard():
         # for 1 (index=5) from the standard loader group
         # with hc.HyLoader('Now loading',hc.Loaders.standard_loaders,index=5):
         #     time.sleep(2)
-            
+
         with st.sidebar:
             st.markdown(
                 '<h1 style="font-size:35px;">Pairs Trading</h1>', unsafe_allow_html=True)
             st.markdown("""<small style="text-align: justify; text-size: 0.000001rem">
-                        <i>A strategy consisting in first identify 2 currencies that are 
+                        <i>A strategy consisting in first identify 2 currencies that are
                         highly correlated and cointegrated and backtest them. After that,
-                        if the price are too deviated (outside Bollinger Bands), we buy the undervalued 
-                        currency while short-sell the overvalued currency and exit 
-                        positions when prices returns to neutrality (middle Band). This strategy 
+                        if the price are too deviated (outside Bollinger Bands), we buy the undervalued
+                        currency while short-sell the overvalued currency and exit
+                        positions when prices returns to neutrality (middle Band). This strategy
                         can also be referred as market neutral or statistical arbitrage.</i>
-                        <br></br> 
+                        <br></br>
                         </small><small>
                         The neutrality simplied formula is:
-                        
+
                         A - B * (A / B) = 0
-                        
+
 So:</small>
 
-                        Currency1 - Currency2 * Ratio                    
+                        Currency1 - Currency2 * Ratio
 
 </small>
                         """, unsafe_allow_html=True)
 
-            st.markdown('<h1>Pair Selection</h1>', unsafe_allow_html=True)
-            pairs = st.selectbox(
+        with st.sidebar:
+            with st.form('Update Data'):
+                st.markdown(
+                    '<h1>Update Data</h1><small>(take few minutes to complete)</small>', unsafe_allow_html=True)
+                # with side_col1:
+
+                side_col1, side_col2 = st.columns(2)
+
+                with side_col1:
+                    timeframe = st.selectbox(
+                        'Timeframe:', 
+                        ['4h', '1d', '1w'], 
+                        2
+                )
+
+
+                with side_col2:
+                    interval =st.date_input(
+                        'Begin: (max 3 years)',
+                        datetime.date(2022, 4, 7),
+                        min_value=datetime.date(2020, 4, 7)
+                    )
+                    
+                # with side_col3:
+                min_correlation=st.number_input(
+                    'Minimun Correlation (1 = 100%):',
+                    min_value = 0.0,
+                    max_value = 1.0,
+                    value = 0.83
+                )
+                # st.form_submit_button('Update Data', on_click=self.__load_data, args=(timeframe, min_correlation, f'{start_date}' , f'{end_date}'))
+                form_button=st.form_submit_button('Update Data')
+
+                if form_button:
+                    self.__load_data(
+                        timeframe, min_correlation, interval)
+                    # st.experimental_rerun()
+
+        with st.sidebar:
+            st.markdown('<h1>Pair Selection</h1>', unsafe_allow_html = True)
+            pairs=st.selectbox(
                 'Select the pair for analysis:',
                 [f'{row["Currency1"]}/{row["Currency2"]}' for __,
                     row in self.researched_df.iterrows()]
             )
 
-            currency1 = pairs.split('/')[0]
-            currency2 = pairs.split('/')[1]
-            ratio = self.researched_df.loc[(self.researched_df['Currency1'] == currency1) & (
+            currency1=pairs.split('/')[0]
+            currency2=pairs.split('/')[1]
+            ratio=self.researched_df.loc[(self.researched_df['Currency1'] == currency1) & (
                 self.researched_df['Currency2'] == currency2), 'Ratio'].values[0]
 
 
-            
-            r = [row for __, row in self.researched_df.iterrows() if row['Currency1'] ==
+
+            r=[row for __, row in self.researched_df.iterrows() if row['Currency1'] ==
                  currency1 and row['Currency2'] == currency2][0]
 
             st.markdown(
@@ -162,49 +185,14 @@ So:</small>
             st.markdown(
                 f'<small style="text-align: left">Ratio: {round(ratio, 6)}</small>', unsafe_allow_html=True)
 
-            with st.form('Update Data'):
-                st.markdown('<h1>Update Data</h1><small>(take few minutes to complete)</small>', unsafe_allow_html=True)
-                # with side_col1:
-                timeframe = st.selectbox(
-                    'Timeframe:',
-                    ['5m', '15m', '1h', '4h', '1d', '1S', '1M'],
-                    4
-                )
-                
-                side_col1, side_col2 = st.columns(2)
-                
-                with side_col1:
-                    start_date = st.date_input(
-                        'Start Date:',
-                        datetime.date(2022,4,8)
-                        
-                    )
-                
-                with side_col2:
-                    end_date = st.date_input(
-                        'End Date:',
-                        datetime.date(2023,4,7)
-                    )
-
-                # with side_col3:
-                min_correlation = st.number_input(
-                    'Minimun Correlation:',
-                    min_value=0.0,
-                    max_value=1.0,
-                    value=0.83
-                )
-                
-                st.form_submit_button('Update Data', on_click=self.__update_data, args=(timeframe, min_correlation, f'{start_date}' , f'{end_date}'))
-        
-        st.markdown('', unsafe_allow_html=True)
-
+            
         up_col1, up_col2 = st.columns([2, 3])
         down_col1, down_col2 = st.columns([5, 2])
 
         with down_col1:
             st.markdown('<h5>Trades over period</h5>', unsafe_allow_html=True)
 
-            fig = self.backtester.plot_backtest(
+            fig = self.plot_backtest(
                 currency1, currency2, ratio, saveonly=True)
             fig.set_figwidth(16)
             st.pyplot(fig,
