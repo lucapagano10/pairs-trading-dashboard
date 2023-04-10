@@ -1,8 +1,8 @@
-pandas
-numpy
-python-binance
-statsmodels
-matplotlib
-altair
-backtrader
-sklearn
+pandas == 1.5.3
+numpy == 1.23.5
+python-binance == 1.0.17
+statsmodels == 0.13.5
+matplotlib == 3.2.2
+altair == 4.2.2
+backtrader == 1.9.76.123
+sklearn == 1.2.2
