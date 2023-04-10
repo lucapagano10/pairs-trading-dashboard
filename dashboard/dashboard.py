@@ -134,7 +134,7 @@ So:</small>
                     timeframe = st.selectbox(
                         'Timeframe:', 
                         ['4h', '1d', '1w'], 
-                        2
+                        1
                 )
 
 
