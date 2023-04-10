@@ -5,4 +5,4 @@ statsmodels == 0.13.5
 matplotlib == 3.2.2
 altair == 4.2.2
 backtrader
-sklearn == 1.2.2
+scikit-learn == 1.2.2
