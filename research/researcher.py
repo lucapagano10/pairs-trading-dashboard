@@ -20,23 +20,6 @@ class Researcher():
         self.coint_df = pd.read_csv(os.path.join(path,"..", "data/processing/coint_output.csv"))
         self.researched_df = pd.read_csv(os.path.join(path,"..", "data/researched/research_output.csv"))
 
-
-    def update_research_data(self,timeframe:str, min_correlation:float, interval:str, end_date: str = None, save: bool = True) -> None:
-        """
-        :param timeframe: e.g. '15m', '4h', '1d', '3w', '1M'
-        :type: str
-        
-        :param min_correlation: e.g. '0.83' is 83%
-        :type: float
-                
-        :param interval: e.g. '1 year ago', '10days ago', '2022-04-08 (need to declare end_date)'
-        :type: str
-        
-        :param end_date: e.g. '2023-04-08'
-        :type: str
-        """
-        self.hist_df = research.Loader().get_historical_data(timeframe=timeframe, interval=interval, end_date=end_date, save=False)
-        self.__read_research_data(min_correlation)
         
     def filter_research_data(self,timeframe:str, min_correlation:float, interval:str) -> None:
         """
@@ -49,7 +32,7 @@ class Researcher():
         :param interval: datetime
         :type: str
         """
-        self.hist_df = research.Loader().filter_data(timeframe, interval)
+        self.hist_df = research.Loader().load_data(timeframe, interval)
         self.__read_research_data(min_correlation)
         
     def __read_research_data(self, min_correlation: float) -> None:
