@@ -10,11 +10,12 @@ class Cointegration():
 
     def get_cointegration(self, corr: pd.DataFrame, cleared_df: pd.DataFrame, save: bool = True
                           ) -> pd.DataFrame:
-
-        ts_coint = self.__get_ts_coint(corr, cleared_df)
-        ts_coint.to_csv(os.path.join(path,'..','data/processing/coint_output.csv'), index=False) if save else None
-        return ts_coint
-
+        if len(corr) > 0:
+            ts_coint = self.__get_ts_coint(corr, cleared_df)
+            ts_coint.to_csv(os.path.join(path,'..','data/processing/coint_output.csv'), index=False) if save else None
+            return ts_coint
+        raise ValueError('No pairs found')
+    
     def __get_ts_coint(self, corr: pd.DataFrame, cleared_df: pd.DataFrame) -> pd.DataFrame:
         coint_series = corr.apply(lambda corr_row: ts.coint(cleared_df[corr_row['Currency1']],
                                                             cleared_df[corr_row['Currency2']]), axis=1)
