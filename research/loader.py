@@ -1,6 +1,5 @@
 
-from binance.client import Client
-from concurrent.futures import ThreadPoolExecutor
+
 import pandas as pd
 import os
 

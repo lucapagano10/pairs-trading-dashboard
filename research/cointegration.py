@@ -3,27 +3,20 @@ import pandas as pd
 import numpy as np
 import statsmodels.tsa.stattools as ts
 import os
-# from concurrent.futures import ThreadPoolExecutor
-from multiprocessing.pool import ThreadPool
-from itertools import repeat
-import time
 
 
 path = os.path.dirname(__file__)
-
 
 class Cointegration():
 
     def get_cointegration(self, corr: pd.DataFrame, cleared_df: pd.DataFrame, save: bool = True
                           ) -> pd.DataFrame:
-        
-        start_time = time.time()
+
         
         coint_df = self.__get_ts_coint_result(corr, cleared_df)
         coint_df.to_csv(os.path.join(
             path, '..', 'data/processing/coint_output.csv'), index=False) if save else None
         
-        print("--- %s seconds ---" % (time.time() - start_time))
         return coint_df
 
     def __get_ts_coint_result(self, corr: pd.DataFrame, cleared_df: pd.DataFrame) -> pd.DataFrame:

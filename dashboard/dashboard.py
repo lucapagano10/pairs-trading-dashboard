@@ -255,7 +255,6 @@ So:</small>
                                    interval=interval)
         
         if len(_self.researched_df):
-            # _self.run_backtest(save=False)
 
             st.session_state['hist_df'] = _self.hist_df
             st.session_state['cleared_df'] = _self.cleared_df
