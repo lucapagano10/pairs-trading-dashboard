@@ -19,20 +19,10 @@ class Backtester():
         self.backtested_df = pd.DataFrame()
         self.backtested_fig = matplotlib
 
-        
-    def read_researched_data(self, researched: Researcher) -> None:
-        self.hist_df = researched.hist_df
-        self.cleared_df = researched.cleared_df
-        self.corr_df = researched.corr_df
-        self.coint_df = researched.coint_df
-        self.researched_df = researched.researched_df
-      
-    def load_backtested_data(self) -> None:
-        self.backtested_df = pd.read_csv(os.path.join(path,"..", "data/backtested/backtester_output.csv"))
+    def plot_backtest(self, currency1:str, currency2:str, ratio:float, saveonly:bool=False) -> matplotlib:
+        return self.__single_backtest(currency1, currency2, ratio)
               
     def __single_backtest(self, currency1, currency2, ratio) -> None:
-        print('currency1, currency2, ratio')
-        print(currency1, currency2, ratio)
         cerebro = bt.Cerebro()
         
         df = self.__transform_data(currency1, currency2, ratio)
@@ -44,7 +34,6 @@ class Backtester():
         cerebro.broker.setcommission(commission=0.0008)
         cerebro.broker.set_cash(cash=1000)
         
-        cerebro.addanalyzer(bt.analyzers.AnnualReturn, _name='areturn')
         cerebro.addanalyzer(bt.analyzers.Returns, _name='returns')
         cerebro.addanalyzer(bt.analyzers.DrawDown, _name='drawdown')
         cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name='sharpe')
@@ -54,8 +43,9 @@ class Backtester():
         
         output = cerebro.run()
         
-        returns_df = self.__get_returns(currency1, currency2, ratio, output)
-        self.backtested_df = pd.concat([self.backtested_df, returns_df]) 
+        self.backtested_df =  self.__get_returns(currency1, currency2, ratio, output)
+        # returns_df = self.__get_returns(currency1, currency2, ratio, output)
+        # self.backtested_df = pd.concat([self.backtested_df, returns_df]) 
     
         figs = self.__get_figure(cerebro, volume=False)
         return figs[0][0]
@@ -78,17 +68,14 @@ class Backtester():
         trade = output[0].analyzers.trade.get_analysis()
         returns['N_trades'] = trade.total.closed
         returns['Won'] = trade.won.total
-        returns['Win_rate'] = round(trade.won.total / trade.total.closed * 100, 2)
-        
-        returns['Roi']  = round(output[0].analyzers.returns.get_analysis()['rtot'] * 100, 2)
+        returns['Win_rate'] = round(trade.won.total / trade.total.closed * 100, 2)  
+              
+        returns['Roi']  = round(output[0].analyzers.returns.get_analysis()['rnorm'] *100,  2)
         returns['Sharperatio'] = round(output[0].analyzers.sharpe.get_analysis()['sharperatio'], 2)
-        returns['Drawdown'] = round(output[0].analyzers.drawdown.get_analysis().drawdown, 2) 
+        returns['Drawdown'] = round(output[0].analyzers.drawdown.get_analysis().max.drawdown, 2) 
         
         return pd.DataFrame(returns,index=[0])
     
-
-    def plot_backtest(self, currency1:str, currency2:str, ratio:float, saveonly:bool=False) -> matplotlib:
-        return self.__single_backtest(currency1, currency2, ratio)
       
     def __get_figure(self, cerebro,plotter=None, numfigs=1, iplot=True, start=None, end=None,
              width=16, height=9, dpi=300, tight=True, use=None,

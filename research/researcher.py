@@ -1,8 +1,6 @@
 import pandas as pd
 import research
 import os
-path = os.path.dirname(__file__)
-
 class Researcher():
     
     def __init__(self) -> None:
@@ -13,14 +11,6 @@ class Researcher():
         self.researched_df = pd.DataFrame()
     
     
-    def load_researched_data(self) -> None:
-        self.hist_df = pd.read_csv(os.path.join(path,"..", "data/raw/historical_data.csv"), header=[0, 1], index_col=0)
-        self.cleared_df = pd.read_csv(os.path.join(path,"..", "data/processing/cleaner_output.csv"), index_col=0)
-        self.corr_df = pd.read_csv(os.path.join(path,"..", "data/processing/corr_output.csv"))
-        self.coint_df = pd.read_csv(os.path.join(path,"..", "data/processing/coint_output.csv"))
-        self.researched_df = pd.read_csv(os.path.join(path,"..", "data/researched/research_output.csv"))
-
-        
     def filter_research_data(self,timeframe:str, min_correlation:float, interval:str) -> None:
         """
         :param timeframe: e.g. '15m', '4h', '1d', '3w', '1M'

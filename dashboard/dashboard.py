@@ -17,9 +17,6 @@ class Dashboard(Backtester, Researcher):
     def __init__(self):
         super().__init__()
 
-    # @st.cache_resources()
-
-
     def run(self) -> None:
         self.load_data()
         self.__set_page_config(layout="wide")
@@ -39,8 +36,8 @@ class Dashboard(Backtester, Researcher):
             self.backtested_fig = st.session_state['backtested_fig']
 
         else:
-            self.load_researched_data()
-            self.load_backtested_data()
+            self.__update_dashboard( '1d', 0.83, '2022-4-7' )
+            # self.load_backtested_data()
 
     def __set_page_config(self, layout: str = "wide") -> None:
         st.set_page_config(layout=layout)
@@ -114,7 +111,7 @@ So:</small>
         with st.sidebar:
             with st.form('Update Data'):
                 st.markdown(
-                    '<h1>Update Data</h1><small>(take few minutes to complete)</small>', unsafe_allow_html=True)
+                    '<h1>Update Data</h1><small>(may take sometime)</small>', unsafe_allow_html=True)
 
                 side_col1, side_col2 = st.columns(2)
 
@@ -133,17 +130,17 @@ So:</small>
                     )
 
                 min_correlation = st.number_input(
-                    'Minimun Correlation (1 = 100%):',
-                    min_value=0.0,
-                    max_value=1.0,
-                    value=0.83
+                    'Minimum Correlation Rate (%):',
+                    min_value=0,
+                    max_value=100,
+                    value=83
                 )
                 
                 form_button = st.form_submit_button('Update Data')
 
                 if form_button:
                     self.__update_dashboard(
-                        timeframe, min_correlation, interval)
+                        timeframe, round(float(min_correlation/100),2), interval)
         try:
             with st.sidebar:
                 st.markdown('<h1>Pair Selection</h1>', unsafe_allow_html=True)
@@ -201,30 +198,27 @@ So:</small>
                 st.markdown(
                     f'<small>Win Rate: {results["Win_rate"].values[0]} %</small>', unsafe_allow_html=True)
                 st.markdown(
-                    f'<small>Return of Investment: {results["Roi"].values[0]} %</small>', unsafe_allow_html=True)
+                    f'<small>Normalized Return: {results["Roi"].values[0]} %</small>', unsafe_allow_html=True)
                 st.markdown(
                     f'<small>Sharpe Ratio: {results["Sharperatio"].values[0]} </small>', unsafe_allow_html=True)
                 st.markdown(
-                    f'<small>Drawdown: {results["Drawdown"].values[0]} </small>', unsafe_allow_html=True)
+                    f'<small>Max Drawdown: {results["Drawdown"].values[0]} </small>', unsafe_allow_html=True)
 
             with up_col1:
                 st.markdown('<h5>Cointegration between currencies</h5>',
                             unsafe_allow_html=True)
 
                 scatter = alt.Chart(self.cleared_df).mark_point().encode(
-                    x=currency1,
-                    y=currency2
+                    alt.X(f"{currency1}:Q", title=f"log( {currency1} )"), 
+                    alt.Y(f"{currency2}:Q", title=f"log( {currency2} )")
+                    # x=currency1,
+                    # y=currency2
                 ).properties(
                     # height=250
                 )
 
                 regression = scatter.transform_regression(
                     currency1, currency2).mark_line(color='green').interactive()
-
-                # scatter = alt.Chart(df).mark_point().encode(
-                #     x=currency1,
-                #     y=currency2
-                # )
 
                 st.altair_chart(scatter + regression, use_container_width=True)
 
@@ -246,9 +240,10 @@ So:</small>
 
                 st.altair_chart(prices_graph,
                                 use_container_width=True)
-        except Exception as e:
+        except Exception as e: 
             st.warning('No data to show. Please update data.')
-
+    
+    @st.cache_data
     def __update_dashboard(_self, timeframe: str, min_correlation: float, interval: str) -> None:
 
         _self.filter_research_data(timeframe=timeframe, min_correlation=min_correlation,
