@@ -17,13 +17,19 @@ class Dashboard(Backtester, Researcher):
     def __init__(self):
         super().__init__()
 
+    # @st.cache_resources()
+
+
+    def run(self) -> None:
+        self.load_data()
+        self.__set_page_config(layout="wide")
+        self.__define_initial_style()
+        self.__write_columns()
+
     def load_data(self) -> None:
 
-        if 'hist_df' not in st.session_state:
-            self.load_researched_data()
-            self.load_backtested_data()
+        if 'hist_df' in st.session_state:
 
-        else:
             self.hist_df = st.session_state['hist_df']
             self.cleared_df = st.session_state['cleared_df']
             self.corr_df = st.session_state['corr_df']
@@ -32,26 +38,9 @@ class Dashboard(Backtester, Researcher):
             self.backtested_df = st.session_state['backtested_df']
             self.backtested_fig = st.session_state['backtested_fig']
 
-    @st.cache_data
-    def __load_data(_self, timeframe: str, min_correlation: float, interval: str) -> None:
-
-        _self.filter_research_data(timeframe=timeframe, min_correlation=min_correlation,
-                                   interval=interval)
-        
-        _self.run_backtest(save=False)
-
-        st.session_state['hist_df'] = _self.hist_df
-        st.session_state['cleared_df'] = _self.cleared_df
-        st.session_state['corr_df'] = _self.corr_df
-        st.session_state['coint_df'] = _self.coint_df
-        st.session_state['researched_df'] = _self.researched_df
-        st.session_state['backtested_df'] = _self.backtested_df
-        st.session_state['backtested_fig'] = _self.backtested_fig
-
-    def run(self) -> None:
-        self.__set_page_config(layout="wide")
-        self.__define_initial_style()
-        self.__write_columns()
+        else:
+            self.load_researched_data()
+            self.load_backtested_data()
 
     def __set_page_config(self, layout: str = "wide") -> None:
         st.set_page_config(layout=layout)
@@ -126,135 +115,153 @@ So:</small>
             with st.form('Update Data'):
                 st.markdown(
                     '<h1>Update Data</h1><small>(take few minutes to complete)</small>', unsafe_allow_html=True)
-                # with side_col1:
 
                 side_col1, side_col2 = st.columns(2)
 
                 with side_col1:
                     timeframe = st.selectbox(
-                        'Timeframe:', 
-                        ['4h', '1d', '1w'], 
+                        'Timeframe:',
+                        ['4h', '1d', '1w'],
                         1
-                )
-
+                    )
 
                 with side_col2:
-                    interval =st.date_input(
+                    interval = st.date_input(
                         'Begin: (max 3 years)',
                         datetime.date(2022, 4, 7),
                         min_value=datetime.date(2020, 4, 7)
                     )
-                    
-                # with side_col3:
-                min_correlation=st.number_input(
+
+                min_correlation = st.number_input(
                     'Minimun Correlation (1 = 100%):',
-                    min_value = 0.0,
-                    max_value = 1.0,
-                    value = 0.83
+                    min_value=0.0,
+                    max_value=1.0,
+                    value=0.83
                 )
-                # st.form_submit_button('Update Data', on_click=self.__load_data, args=(timeframe, min_correlation, f'{start_date}' , f'{end_date}'))
-                form_button=st.form_submit_button('Update Data')
+                
+                form_button = st.form_submit_button('Update Data')
 
                 if form_button:
-                    self.__load_data(
+                    self.__update_dashboard(
                         timeframe, min_correlation, interval)
-                    # st.experimental_rerun()
+        try:
+            with st.sidebar:
+                st.markdown('<h1>Pair Selection</h1>', unsafe_allow_html=True)
+                pairs = st.selectbox(
+                    'Select the pair for analysis:',
+                    [f'{row["Currency1"]}/{row["Currency2"]}' for __,
+                        row in self.researched_df.iterrows()]
+                )
 
-        with st.sidebar:
-            st.markdown('<h1>Pair Selection</h1>', unsafe_allow_html = True)
-            pairs=st.selectbox(
-                'Select the pair for analysis:',
-                [f'{row["Currency1"]}/{row["Currency2"]}' for __,
-                    row in self.researched_df.iterrows()]
-            )
+                currency1 = pairs.split('/')[0]
+                currency2 = pairs.split('/')[1]
+                ratio = self.researched_df.loc[(self.researched_df['Currency1'] == currency1) & (
+                    self.researched_df['Currency2'] == currency2), 'Ratio'].values[0]
 
-            currency1=pairs.split('/')[0]
-            currency2=pairs.split('/')[1]
-            ratio=self.researched_df.loc[(self.researched_df['Currency1'] == currency1) & (
-                self.researched_df['Currency2'] == currency2), 'Ratio'].values[0]
+                r = [row for __, row in self.researched_df.iterrows() if row['Currency1'] ==
+                     currency1 and row['Currency2'] == currency2][0]
 
+                st.markdown(
+                    f'<small style="text-align: left; margin-bottom:10px;">Correlation Rate: {"{:.2f}".format(r["Correlation"] * 100)}%</small>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<small style="text-align: left">Is Cointegrated: {"Yes" if r["Cointegration"] < r["Criticals"] else "No"}</small>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<small style="text-align: left">Ratio: {round(ratio, 6)}</small>', unsafe_allow_html=True)
 
+            up_col1, up_col2 = st.columns([2, 3])
+            down_col1, down_col2 = st.columns([5, 2])
 
-            r=[row for __, row in self.researched_df.iterrows() if row['Currency1'] ==
-                 currency1 and row['Currency2'] == currency2][0]
+            with down_col1:
+                st.markdown('<h5>Trades over period</h5>',
+                            unsafe_allow_html=True)
 
-            st.markdown(
-                f'<small style="text-align: left; margin-bottom:10px;">Correlation Rate: {"{:.2f}".format(r["Correlation"] * 100)}%</small>', unsafe_allow_html=True)
-            st.markdown(
-                f'<small style="text-align: left">Is Cointegrated: {"Yes" if r["Cointegration"] < r["Criticals"] else "No"}</small>', unsafe_allow_html=True)
-            st.markdown(
-                f'<small style="text-align: left">Ratio: {round(ratio, 6)}</small>', unsafe_allow_html=True)
+                fig = self.plot_backtest(
+                    currency1, currency2, ratio, saveonly=True)
+                
+                fig.set_figwidth(16)
+                
+                st.pyplot(fig,
+                          use_container_width=True
+                          )
 
-            
-        up_col1, up_col2 = st.columns([2, 3])
-        down_col1, down_col2 = st.columns([5, 2])
+                st.session_state['backtested_df'] = self.backtested_df
+                st.session_state['backtested_fig'] = self.backtested_fig
 
-        with down_col1:
-            st.markdown('<h5>Trades over period</h5>', unsafe_allow_html=True)
+            with down_col2:
 
-            fig = self.plot_backtest(
-                currency1, currency2, ratio, saveonly=True)
-            fig.set_figwidth(16)
-            st.pyplot(fig,
-                      #  use_container_width=True
-                      use_container_width=True
-                      )
+                results = self.backtested_df.loc[(self.backtested_df['Currency1'] == currency1) & (
+                    self.backtested_df['Currency2'] == currency2)]
+                # results = pd.read_csv(os.path.join(
+                #     path, f"data/backtested/{currency1}-{currency2}.csv"))
+                st.markdown('<h5>Results</h5>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<small>Total of Trades: {results["N_trades"].values[0]} </small>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<small>Won Trades: {results["Won"].values[0]} </small>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<small>Win Rate: {results["Win_rate"].values[0]} %</small>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<small>Return of Investment: {results["Roi"].values[0]} %</small>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<small>Sharpe Ratio: {results["Sharperatio"].values[0]} </small>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<small>Drawdown: {results["Drawdown"].values[0]} </small>', unsafe_allow_html=True)
 
-        with down_col2:
+            with up_col1:
+                st.markdown('<h5>Cointegration between currencies</h5>',
+                            unsafe_allow_html=True)
 
-            results = self.backtested_df.loc[(self.backtested_df['Currency1'] == currency1) & (
-                self.backtested_df['Currency2'] == currency2)]
-            # results = pd.read_csv(os.path.join(
-            #     path, f"data/backtested/{currency1}-{currency2}.csv"))
-            st.markdown('<h5>Results</h5>', unsafe_allow_html=True)
-            st.markdown(
-                f'<small>Total of Trades: {results["N_trades"].values[0]} </small>', unsafe_allow_html=True)
-            st.markdown(
-                f'<small>Won Trades: {results["Won"].values[0]} </small>', unsafe_allow_html=True)
-            st.markdown(
-                f'<small>Win Rate: {results["Win_rate"].values[0]} %</small>', unsafe_allow_html=True)
-            st.markdown(
-                f'<small>Return of Investment: {results["Roi"].values[0]} %</small>', unsafe_allow_html=True)
-            st.markdown(
-                f'<small>Sharpe Ratio: {results["Sharperatio"].values[0]} </small>', unsafe_allow_html=True)
-            st.markdown(
-                f'<small>Drawdown: {results["Drawdown"].values[0]} </small>', unsafe_allow_html=True)
+                scatter = alt.Chart(self.cleared_df).mark_point().encode(
+                    x=currency1,
+                    y=currency2
+                ).properties(
+                    # height=250
+                )
 
-        with up_col1:
-            st.markdown('<h5>Cointegration between currencies</h5>',
-                        unsafe_allow_html=True)
+                regression = scatter.transform_regression(
+                    currency1, currency2).mark_line(color='green').interactive()
 
-            scatter = alt.Chart(self.cleared_df).mark_point().encode(
-                x=currency1,
-                y=currency2
-            ).properties(
-                # height=250
-            )
+                # scatter = alt.Chart(df).mark_point().encode(
+                #     x=currency1,
+                #     y=currency2
+                # )
 
-            regression = scatter.transform_regression(
-                currency1, currency2).mark_line(color='green').interactive()
+                st.altair_chart(scatter + regression, use_container_width=True)
 
-            # scatter = alt.Chart(df).mark_point().encode(
-            #     x=currency1,
-            #     y=currency2
-            # )
+            with up_col2:
 
-            st.altair_chart(scatter + regression, use_container_width=True)
+                st.markdown('<h5>Daily Close Price</h5>',
+                            unsafe_allow_html=True)
 
-        with up_col2:
+                cleared_df = self.cleared_df.reset_index()
 
-            st.markdown('<h5>Daily Close Price</h5>', unsafe_allow_html=True)
+                prices_graph = alt.Chart(cleared_df).mark_line().transform_fold(
+                    fold=[currency1, currency2],
+                    as_=['Currency', 'Price']
+                ).encode(
+                    x='Time:T',
+                    y='Price:Q',
+                    color='Currency:N'
+                ).interactive()
 
-            cleared_df = self.cleared_df.reset_index()
+                st.altair_chart(prices_graph,
+                                use_container_width=True)
+        except Exception as e:
+            st.warning('No data to show. Please update data.')
 
-            prices_graph = alt.Chart(cleared_df).mark_line().transform_fold(
-                fold=[currency1, currency2],
-                as_=['Currency', 'Price']
-            ).encode(
-                x='Time:T',
-                y='Price:Q',
-                color='Currency:N'
-            ).interactive()
+    def __update_dashboard(_self, timeframe: str, min_correlation: float, interval: str) -> None:
 
-            st.altair_chart(prices_graph,
-                            use_container_width=True)
+        _self.filter_research_data(timeframe=timeframe, min_correlation=min_correlation,
+                                   interval=interval)
+        
+        if len(_self.researched_df):
+            # _self.run_backtest(save=False)
+
+            st.session_state['hist_df'] = _self.hist_df
+            st.session_state['cleared_df'] = _self.cleared_df
+            st.session_state['corr_df'] = _self.corr_df
+            st.session_state['coint_df'] = _self.coint_df
+            st.session_state['researched_df'] = _self.researched_df
+
+        else:
+            st.warning("No pairs trading found. Please adjust your parameters.")

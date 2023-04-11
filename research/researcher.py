@@ -38,5 +38,5 @@ class Researcher():
     def __read_research_data(self, min_correlation: float) -> None:
         self.cleared_df = research.Cleaner().get_cleared_data(self.hist_df, save=False)
         self.corr_df = research.Correlation().get_log_correlation(self.cleared_df, min_correlation=min_correlation, save=False)
-        self.coint_df = research.Cointegration().get_cointegration(self.corr_df, self.cleared_df, save=False)
-        self.researched_df = research.Ratio().get_ratio(self.coint_df, self.cleared_df, save=False)
+        self.coint_df = research.Cointegration().get_cointegration(self.corr_df, self.cleared_df, save=False) if len(self.corr_df) else pd.DataFrame()
+        self.researched_df = research.Ratio().get_ratio(self.coint_df, self.cleared_df, save=False) if len(self.coint_df) else pd.DataFrame()
