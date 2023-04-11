@@ -243,9 +243,7 @@ So:</small>
         except Exception as e: 
             st.warning('No data to show. Please update data.')
     
-    @st.cache_data
     def __update_dashboard(_self, timeframe: str, min_correlation: float, interval: str) -> None:
-
         _self.filter_research_data(timeframe=timeframe, min_correlation=min_correlation,
                                    interval=interval)
         
