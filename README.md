@@ -3,11 +3,9 @@ Web Based Dashboard of Pairs Trading Analysis
  
 Continuing the explanation among two previous repos, I decided to gather research and backtest and do a fully comprehensive dynamic dashboard.
  
-Visit...
+To visualize this project, visit...
 
 https://algo-tradings-pairs-trading-dashboard-app-dashboard-7ftynt.streamlit.app/
-
-...To visualize this project
 
 Hope you like.
 
