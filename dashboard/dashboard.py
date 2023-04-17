@@ -198,7 +198,7 @@ So:</small>
                 st.markdown(
                     f'<small>Win Rate: {results["Win_rate"].values[0]} %</small>', unsafe_allow_html=True)
                 st.markdown(
-                    f'<small>Normalized Return: {results["Roi"].values[0]} %</small>', unsafe_allow_html=True)
+                    f'<small>Total Compound Return: {results["Roi"].values[0]} %</small>', unsafe_allow_html=True)
                 st.markdown(
                     f'<small>Sharpe Ratio: {results["Sharperatio"].values[0]} </small>', unsafe_allow_html=True)
                 st.markdown(

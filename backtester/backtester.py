@@ -70,7 +70,7 @@ class Backtester():
         returns['Won'] = trade.won.total
         returns['Win_rate'] = round(trade.won.total / trade.total.closed * 100, 2)  
               
-        returns['Roi']  = round(output[0].analyzers.returns.get_analysis()['rnorm'] *100,  2)
+        returns['Roi']  = round(output[0].analyzers.returns.get_analysis()['rtot'] *100,  2)
         returns['Sharperatio'] = round(output[0].analyzers.sharpe.get_analysis()['sharperatio'], 2)
         returns['Drawdown'] = round(output[0].analyzers.drawdown.get_analysis().max.drawdown, 2) 
         
