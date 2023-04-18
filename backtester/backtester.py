@@ -4,8 +4,6 @@ import pandas as pd
 import backtrader as bt 
 import os
 
-from research import Researcher
-
 path = os.path.dirname(__file__)
 
 class Backtester(): 
