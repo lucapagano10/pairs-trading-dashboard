@@ -5,7 +5,7 @@ Continuing the explanation among two previous repos, I decided to gather researc
  
 To visualize this project, visit...
 
-https://algo-tradings-pairs-trading-dashboard-app-dashboard-7ftynt.streamlit.app/
+https://pairs-trading.streamlit.app/
 
 Hope you like.
 
