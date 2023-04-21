@@ -256,4 +256,4 @@ So:</small>
             st.session_state['researched_df'] = _self.researched_df
 
         else:
-            st.warning("No pairs trading found. Please adjust your parameters.")
+            st.warning("No pairs trading found. Please adjust the parameters.")
